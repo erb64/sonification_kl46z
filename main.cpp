@@ -38,6 +38,8 @@ int character_lcd_puts(char *str)
 
 //INSERT GLOBAL DEFS HERE, AND OTHER INCLUDES
 
+//Snooze functionality
+/********************************************************************/
 Boolean snooze_on = FALSE;
 const int SNOOZE_DURATION_MIN = 1, //preset by user
 		  SNOOZE_DURATION_US = SNOOZE_DURATION_MIN * 60000000; //60 million microseconds in each minute
@@ -51,6 +53,19 @@ void setup_t_snooze()
 	t_snooze.reset();
 	t_snooze.start();
 }
+/********************************************************************/
+
+//Sensor Inputs and buffer ranges
+/********************************************************************/
+AnalogIn sensor1(PTB1);
+AnalogIn sensor2(PTB1);
+AnalogIn sensor3(PTB1);
+AnalogIn sensor4(PTB1);
+
+//buffer ranges, necessary for setting up priority. names of sensors may
+// change
+
+/********************************************************************/
 
 int main()
 {
@@ -64,8 +79,20 @@ int main()
 	while(1)
 	{
 		//pole sensors
+		s1 = sensor1.read(); //may change these s1, s2, to some array
+		s2 = sensor2.read();
+		s3 = sensor3.read();
+		s4 = sensor4.read();
 
 		//check if snooze is activated
+		if(snooze_on)
+		{
+			//also available: t_snooze.read_ms();
+			time_passed = t_snooze.read_us(); //reads the timer
+
+			if( time_passed > SNOOZE_DURATION_US )
+				snooze_on = FALSE; //turns snooze off if set duration has passed
+		}
 
 		//determine which signal has highest priority
 
