@@ -74,6 +74,11 @@ const uint8_t SENSOR_PRIORITY[] = {1, 2, 3, 4};
 // initialized as uint16_t because the normalized analog in read_u16 returns 
 // a normalized 16bit integer. I did it this way over floats to save space 
 // and increase calculation speed
+const uint16_t BUFFER_ZONES[4][8] = {[0,0,0,0,0,0,0,0],
+									 [0,0,0,0,0,0,0,0], 
+									 [0,0,0,0,0,0,0,0],
+									 [0,0,0,0,0,0,0,0]}
+/*
 const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
 			   S1UB1 = 0, 
 			   S1LB2 = 0,
@@ -85,10 +90,10 @@ const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
 
 //buffer zones for sensor 2
 const uint16_t S2LB1 = 0, //value indicates the low end for the first buffer
-				S2UB1 = 0, 
-				S2LB2 = 0,
-				S2UB2 = 0, 
-				S2LB3 = 0, 
+			   S2UB1 = 0, 
+			   S2LB2 = 0,
+			   S2UB2 = 0, 
+			   S2LB3 = 0, 
 				S2UB3 = 0, 
 				S2LB4 = 0, 
 				S2UB4 = 0; 
@@ -112,7 +117,7 @@ const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
 				S4UB3 = 0, 
 				S4LB4 = 0, 
 				S4UB4 = 0; 
-
+*/
 
 /********************************************************************/
 
@@ -158,10 +163,10 @@ int main()
 	while(1)
 	{
 		//pole sensors 
-		sensor_levels[0] = sensor1.read_u16(); //may change these s1, s2, to some array
-		sensor_levels[1] = sensor2.read_u16(); //reads as a 16 bit normalized unsigned integer (for 0V - 3.3V)
-		sensor_levels[2] = sensor3.read_u16();
-		sensor_levels[3] = sensor4.read_u16();
+		sensor_levels_raw[0] = sensor1.read_u16(); //may change these s1, s2, to some array
+		sensor_levels_raw[1] = sensor2.read_u16(); //reads as a 16 bit normalized unsigned integer (for 0V - 3.3V)
+		sensor_levels_raw[2] = sensor3.read_u16();
+		sensor_levels_raw[3] = sensor4.read_u16();
 		/* mbed documentation for AnalogIn's read_u16() function
 		Read the input voltage, represented as an unsigned short in the range [0x0, 0xFFFF]
 
@@ -170,6 +175,10 @@ int main()
 		*/
 
 		//DETERMINE ZONES OF SEVERITY
+		for (int sensor_index = 0, sensor_index < NUM_SENSORS; sensor_index++) 
+			sensor_levels_zone = determineSeverityZone(sensor_index, sensor_levels_raw[sensor_index], 
+														sensor_levels_zone[sensor_index]);
+		
 
 		//check if snooze is activated
 		if(snooze_on)
@@ -187,7 +196,33 @@ int main()
 
 		//output sound/display
 
-
 	}
 
+}
+
+
+// this algorithm can be optimized if we begin the comparison based on the previous zone
+uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
+{
+	if raw_reading < BUFFER_ZONES[sensor_index][0]
+		return 1;
+	else if raw_reading < BUFFER_ZONES[sensor_index][1]
+		return previous_zone; //this returns the previous zone. here i'm assuming that 
+							  // previous_zone was either of the neighboring zones, but
+							  // in future iterations, it might be better to start the 
+	    					  // determination based on what the previous zone was
+	else if raw_reading < BUFFER_ZONES[sensor_index][2]
+		return 2;
+	else if raw_reading < BUFFER_ZONES[sensor_index][3]
+		return previous_zone;
+	else if raw_reading < BUFFER_ZONES[sensor_index][4]
+		return 3;
+	else if raw_reading < BUFFER_ZONES[sensor_index][5]
+		return previous_zone;
+	else if raw_reading < BUFFER_ZONES[sensor_index][6]
+		return 4;
+	else if raw_reading < BUFFER_ZONES[sensor_index][7]
+		return previous_zone;
+	else 
+		return 5;
 }
