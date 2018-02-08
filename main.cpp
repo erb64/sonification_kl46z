@@ -57,39 +57,34 @@ void setup_t_snooze()
 
 //Sensor Inputs and buffer ranges
 /********************************************************************/
-AnalogIn sensor0(PTB1);
+const uint8_t NUM_SENSORS = 4;
+
 AnalogIn sensor1(PTB1);
 AnalogIn sensor2(PTB1);
 AnalogIn sensor3(PTB1);
+AnalogIn sensor4(PTB1);
 
 //buffer ranges, necessary for setting up priority. names of sensors may
 
-//index refers to number of sensor
+//index refers to number of sensor [s1 value, s2 value,....]
 //highest priority is 4 -- lowest is 1
-const short int SENSOR_PRIORITY[] = {1, 2, 3, 4};
-
-//buffer zones for sensor 0
-const short int S0LB1 = 0,//value indicates the low end for the first buffer
-				S0UB1 = 0,
-				S0LB2 = 0,
-				S0UB2 = 0,
-				S0LB3 = 0, 
-				S0UB3 = 0, 
-				S0LB4 = 0, 
-				S0UB4 = 0; 
+const uint8_t SENSOR_PRIORITY[] = {1, 2, 3, 4};
 
 //buffer zones for sensor 1
-const short int S1LB1 = 0, //value indicates the low end for the first buffer
-				S1UB1 = 0, 
-				S1LB2 = 0,
-				S1UB2 = 0, 
-				S1LB3 = 0, 
-				S1UB3 = 0, 
-				S1LB4 = 0, 
-				S1UB4 = 0; 
+// initialized as uint16_t because the normalized analog in read_u16 returns 
+// a normalized 16bit integer. I did it this way over floats to save space 
+// and increase calculation speed
+const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
+			   S1UB1 = 0, 
+			   S1LB2 = 0,
+		       S1UB2 = 0, 
+			   S1LB3 = 0, 
+			   S1UB3 = 0, 
+			   S1LB4 = 0, 
+			   S1UB4 = 0; 
 
 //buffer zones for sensor 2
-const short int S2LB1 = 0, //value indicates the low end for the first buffer
+const uint16_t S2LB1 = 0, //value indicates the low end for the first buffer
 				S2UB1 = 0, 
 				S2LB2 = 0,
 				S2UB2 = 0, 
@@ -99,7 +94,7 @@ const short int S2LB1 = 0, //value indicates the low end for the first buffer
 				S2UB4 = 0; 
 
 //buffer zones for sensor 3
-const short int S3LB1 = 0, //value indicates the low end for the first buffer
+const uint16_t S3LB1 = 0, //value indicates the low end for the first buffer
 				S3UB1 = 0, 
 				S3LB2 = 0,
 				S3UB2 = 0, 
@@ -107,6 +102,16 @@ const short int S3LB1 = 0, //value indicates the low end for the first buffer
 				S3UB3 = 0, 
 				S3LB4 = 0, 
 				S3UB4 = 0; 
+
+//buffer zones for sensor 4
+const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
+				S4UB1 = 0,
+				S4LB2 = 0,
+				S4UB2 = 0,
+				S4LB3 = 0, 
+				S4UB3 = 0, 
+				S4LB4 = 0, 
+				S4UB4 = 0; 
 
 
 /********************************************************************/
@@ -138,6 +143,11 @@ speaker.write(duty_cycle);
 
 int main()
 {
+
+	uint8_t highest_priority_index;
+	uint16_t sensor_levels_raw[NUM_SENSORS];
+	uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
+
 	character_lcd_initialize(); //initializes the display
 	//other peripheral initializations
 
@@ -147,11 +157,19 @@ int main()
 
 	while(1)
 	{
-		//pole sensors
-		s1 = sensor1.read(); //may change these s1, s2, to some array
-		s2 = sensor2.read(); //reads as a float between 0.0 and 1.0 (for 0V - 3.3V)
-		s3 = sensor3.read();
-		s4 = sensor4.read();
+		//pole sensors 
+		sensor_levels[0] = sensor1.read_u16(); //may change these s1, s2, to some array
+		sensor_levels[1] = sensor2.read_u16(); //reads as a 16 bit normalized unsigned integer (for 0V - 3.3V)
+		sensor_levels[2] = sensor3.read_u16();
+		sensor_levels[3] = sensor4.read_u16();
+		/* mbed documentation for AnalogIn's read_u16() function
+		Read the input voltage, represented as an unsigned short in the range [0x0, 0xFFFF]
+
+		Returns
+		16-bit unsigned short representing the current input voltage, normalised to a 16-bit value
+		*/
+
+		//DETERMINE ZONES OF SEVERITY
 
 		//check if snooze is activated
 		if(snooze_on)
