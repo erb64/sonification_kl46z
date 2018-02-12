@@ -177,7 +177,7 @@ int main()
 
         // DETERMINE ZONES OF SEVERITY
         for (int sensor_index = 0, sensor_index < NUM_SENSORS; sensor_index++) 
-            sensor_levels_zone = determineSeverityZone(sensor_index, sensor_levels_raw[sensor_index], 
+            sensor_levels_zone[sensor_indext] = determineSeverityZone(sensor_index, sensor_levels_raw[sensor_index], 
                                                         sensor_levels_zone[sensor_index]);
         
         // GET HIGHEST SEVERITY AND PRIORITY INDEX, check for multiples in highest index, count in highest
@@ -223,12 +223,13 @@ int main()
 
 
 // this algorithm can be optimized if we begin the comparison based on the previous zone
+// can also be optimized by passing variables by reference
 uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
 {
     if raw_reading < BUFFER_ZONES[sensor_index][0]
         return 1;
     else if raw_reading < BUFFER_ZONES[sensor_index][1]
-        return previous_zone; //this returns the previous zone. here i'm assuming that 
+        return previous_zone; // this returns the previous zone. here i'm assuming that 
                               // previous_zone was either of the neighboring zones, but
                               // in future iterations, it might be better to start the 
                               // determination based on what the previous zone was
