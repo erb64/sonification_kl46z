@@ -154,6 +154,8 @@ int main()
     uint16_t sensor_levels_raw[NUM_SENSORS];
     uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
 
+    pc.baud(115200);
+    
     character_lcd_initialize(); //initializes the display
     //other peripheral initializations
 

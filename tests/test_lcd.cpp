@@ -54,7 +54,7 @@ int main()
 	pc.printf("The first line of the LCD should display: %s\nPress any key to continue", test_string_1);
 	character_lcd_puts(&test_string_1);
     pc.scanf("%c", &choice);
-	wait(wait_seconds);
+	// wait(wait_seconds);
 
 	pc.printf("The first line of the LCD should display: %s", test_string_2);
 	character_lcd_puts(&test_string_2);
