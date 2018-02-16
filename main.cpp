@@ -1,4 +1,4 @@
-#include "studio.h"
+//#include "studio.h"
 #include "stdint.h"
 #include "mbed.h"
 #include "Freedom_headers.h"
@@ -38,18 +38,22 @@
 
 //INSERT GLOBAL DEFS HERE, AND OTHER INCLUDES
 
+/********************************************************************/
+Serial pc(USBTX, USBRX);
+/********************************************************************/
+
 //Snooze functionality
 /********************************************************************/
-Boolean snooze_on = FALSE;
+bool snooze_on = false;
 const int SNOOZE_DURATION_MIN = 1, //preset by user
           SNOOZE_DURATION_US = SNOOZE_DURATION_MIN * 60000000; //60 million microseconds in each minute
 
 InterruptIn snooze(PTA6); //CHANGE PORT NAME;
-Timer t_snooze(PTA7); //CHANGE PORT NAME;
+Timer t_snooze; 
 
 void setup_t_snooze()
 {
-    snooze_on = TRUE;
+    snooze_on = true;
     t_snooze.reset();
     t_snooze.start();
 }
@@ -74,10 +78,10 @@ const uint8_t SENSOR_PRIORITY[] = {1, 2, 3, 4};
 // initialized as uint16_t because the normalized analog in read_u16 returns 
 // a normalized 16bit integer. I did it this way over floats to save space 
 // and increase calculation speed
-const uint16_t BUFFER_ZONES[4][8] = {[0,0,0,0,0,0,0,0],
-                                     [0,0,0,0,0,0,0,0], 
-                                     [0,0,0,0,0,0,0,0],
-                                     [0,0,0,0,0,0,0,0]}
+const uint16_t BUFFER_ZONES[4][8] = {{0,0,0,0,0,0,0,0},
+                                     {0,0,0,0,0,0,0,0}, 
+                                     {0,0,0,0,0,0,0,0},
+                                     {0,0,0,0,0,0,0,0}};
 /*
 const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
                S1UB1 = 0, 
@@ -118,7 +122,32 @@ const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
                 S4LB4 = 0, 
                 S4UB4 = 0; 
 */
-
+// this algorithm can be optimized if we begin the comparison based on the previous zone
+// can also be optimized by passing variables by reference
+uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
+{
+    if (raw_reading < BUFFER_ZONES[sensor_index][0])
+        return 1;
+    else if (raw_reading < BUFFER_ZONES[sensor_index][1])
+        return previous_zone; // this returns the previous zone. here i'm assuming that 
+                              // previous_zone was either of the neighboring zones, but
+                              // in future iterations, it might be better to start the 
+                              // determination based on what the previous zone was
+    else if (raw_reading < BUFFER_ZONES[sensor_index][2])
+        return 2;
+    else if (raw_reading < BUFFER_ZONES[sensor_index][3])
+        return previous_zone;
+    else if (raw_reading < BUFFER_ZONES[sensor_index][4])
+        return 3;
+    else if (raw_reading < BUFFER_ZONES[sensor_index][5])
+        return previous_zone;
+    else if (raw_reading < BUFFER_ZONES[sensor_index][6])
+        return 4;
+    else if (raw_reading < BUFFER_ZONES[sensor_index][7])
+        return previous_zone;
+    else 
+        return 5;
+}
 /********************************************************************/
 
 //Volume input
@@ -148,12 +177,16 @@ speaker.write(duty_cycle);
 
 int main()
 {
+    //for priority algorithm
     bool multiple_in_zone;
     uint8_t count_in_high_zone;
     uint8_t highest_severity_index;
     uint16_t sensor_levels_raw[NUM_SENSORS];
     uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
 
+    //for snooze stuff
+    int time_passed;
+    
     pc.baud(115200);
     
     character_lcd_initialize(); //initializes the display
@@ -161,7 +194,7 @@ int main()
 
     //snooze initialization
     snooze.mode(PullDown);//can talk about PullUp mode, i have no preference
-    snooze.rise(&setup);//starts a timer on the rising edge
+    snooze.rise(&setup_t_snooze);//starts a timer on the rising edge
 
     while(1)
     {
@@ -178,8 +211,8 @@ int main()
         */
 
         // DETERMINE ZONES OF SEVERITY
-        for (int sensor_index = 0, sensor_index < NUM_SENSORS; sensor_index++) 
-            sensor_levels_zone[sensor_indext] = determineSeverityZone(sensor_index, sensor_levels_raw[sensor_index], 
+        for (int sensor_index = 0; sensor_index < NUM_SENSORS; sensor_index++) 
+            sensor_levels_zone[sensor_index] = determineSeverityZone(sensor_index, sensor_levels_raw[sensor_index], 
                                                         sensor_levels_zone[sensor_index]);
         
         // GET HIGHEST SEVERITY AND PRIORITY INDEX, check for multiples in highest index, count in highest
@@ -187,7 +220,7 @@ int main()
         highest_severity_index = 0;
         multiple_in_zone = false;
 
-        for (int sensor_index = 1, sensor_index < NUM_SENSORS; sensor_index++)
+        for (int sensor_index = 1; sensor_index < NUM_SENSORS; sensor_index++)
             if(sensor_levels_zone[sensor_index] > sensor_levels_zone[highest_severity_index])
             {
                 count_in_high_zone = 1;
@@ -210,7 +243,7 @@ int main()
             time_passed = t_snooze.read_us(); //reads the timer
 
             if( time_passed > SNOOZE_DURATION_US )
-                snooze_on = FALSE; //turns snooze off if set duration has passed
+                snooze_on = false; //turns snooze off if set duration has passed
         }
 
         //determine which signal has highest priority
@@ -221,32 +254,4 @@ int main()
 
     }
 
-}
-
-
-// this algorithm can be optimized if we begin the comparison based on the previous zone
-// can also be optimized by passing variables by reference
-uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
-{
-    if raw_reading < BUFFER_ZONES[sensor_index][0]
-        return 1;
-    else if raw_reading < BUFFER_ZONES[sensor_index][1]
-        return previous_zone; // this returns the previous zone. here i'm assuming that 
-                              // previous_zone was either of the neighboring zones, but
-                              // in future iterations, it might be better to start the 
-                              // determination based on what the previous zone was
-    else if raw_reading < BUFFER_ZONES[sensor_index][2]
-        return 2;
-    else if raw_reading < BUFFER_ZONES[sensor_index][3]
-        return previous_zone;
-    else if raw_reading < BUFFER_ZONES[sensor_index][4]
-        return 3;
-    else if raw_reading < BUFFER_ZONES[sensor_index][5]
-        return previous_zone;
-    else if raw_reading < BUFFER_ZONES[sensor_index][6]
-        return 4;
-    else if raw_reading < BUFFER_ZONES[sensor_index][7]
-        return previous_zone;
-    else 
-        return 5;
 }
