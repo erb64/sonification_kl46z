@@ -55,11 +55,11 @@ uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_
 }
 /********************************************************************/
 
-    bool multiple_in_zone;
-    uint8_t count_in_high_zone;
-    uint8_t highest_severity_index;
-    uint16_t sensor_levels_raw[NUM_SENSORS];
-    uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
+bool multiple_in_zone;
+uint8_t count_in_high_zone;
+uint8_t highest_severity_index;
+uint16_t sensor_levels_raw[NUM_SENSORS];
+uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
 
 int priorityAlgorithm()
 {
@@ -184,7 +184,7 @@ int main()
     
     priorityAlgorithm();
     
-    pc.printf("TEST 3 - ALL SENSORS IN ALL SENSORS IN EMERGENCY ZONE");
+    pc.printf("TEST 4 - ALL SENSORS IN ALL SENSORS IN EMERGENCY ZONE");
     pc.printf("Actual values:\n\r\tS1 - %i\n\tS2 - %i\n\r\tS3 - %i\n\tS4 %i\n\r", 
               sensor_levels_zone[0],sensor_levels_zone[1],sensor_levels_zone[2],
               sensor_levels_zone[3]);
