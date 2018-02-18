@@ -94,12 +94,19 @@ int priorityAlgorithm()
 
 Serial pc(USBTX, USBRX);
 
+uint16_t normal = 0,
+		 advisory = 20000,
+		 caution = 30000,
+		 warning = 45000,
+		 emergency = 55000;
+
+
 int main()
 {  
     char key;
     /* FIRST TEST - ENSURE IT PICKS THE RIGHT SENSOR */
     /* FIRST - JUST SENSOR 1 IN CAUTION */
-    sensor_levels_raw[0] = 30000;
+    sensor_levels_raw[0] = caution;
     sensor_levels_raw[1] = 0;
     sensor_levels_raw[2] = 0;
     sensor_levels_raw[3] = 0;
@@ -124,7 +131,7 @@ int main()
     /* SECOND TEST - ENSURE IT PICKS THE RIGHT SENSOR */
     /* SECOND - JUST SENSOR 1 IN CAUTION */
     sensor_levels_raw[0] = 0;
-    sensor_levels_raw[1] = 45000;
+    sensor_levels_raw[1] = warning;
     sensor_levels_raw[2] = 0;
     sensor_levels_raw[3] = 0;
     
@@ -145,7 +152,50 @@ int main()
    		pc.printf("TEST 2 FAILED");
 
 
-       
+    /* THIRD TEST - ENSURE IT PICKS THE RIGHT SENSOR */
+    /* THIRD - ALL SENSORS IN DIFFERENT ZONES 2-5 */
+    sensor_levels_raw[0] = advisory;
+    sensor_levels_raw[1] = caution;
+    sensor_levels_raw[2] = warning;
+    sensor_levels_raw[3] = emergency;
+    
+    priorityAlgorithm();
+    
+    pc.printf("TEST 3 - ALL SENSORS IN DIFFERENT RANGE (2-5 increasing)");
+    pc.printf("Actual values:\n\r\tS1 - %i\n\tS2 - %i\n\r\tS3 - %i\n\tS4 %i\n\r", 
+              sensor_levels_zone[0],sensor_levels_zone[1],sensor_levels_zone[2],
+              sensor_levels_zone[3]);
+    if (sensor_levels_zone[0] == 2 && sensor_levels_zone[1] == 3 && 
+    	sensor_levels_zone[2] == 4 && sensor_levels_zone[3] == 5)
+    {
+    	pc.printf("sensors at correct level");
+    	    if(multiple_in_zone == false && highest_severity_index == 3)
+    	    	pc.printf("TEST 3 PASSED");
+    }
+   	else
+   		pc.printf("TEST 3 FAILED");
 
+   	/* FOURTH TEST - ENSURE IT PICKS THE RIGHT SENSOR */
+    /* FOURTH - ALL SENSORS IN EMERGENCY ZONE  */
+    sensor_levels_raw[0] = emergency;
+    sensor_levels_raw[1] = emergency;
+    sensor_levels_raw[2] = emergency;
+    sensor_levels_raw[3] = emergency;
+    
+    priorityAlgorithm();
+    
+    pc.printf("TEST 3 - ALL SENSORS IN ALL SENSORS IN EMERGENCY ZONE");
+    pc.printf("Actual values:\n\r\tS1 - %i\n\tS2 - %i\n\r\tS3 - %i\n\tS4 %i\n\r", 
+              sensor_levels_zone[0],sensor_levels_zone[1],sensor_levels_zone[2],
+              sensor_levels_zone[3]);
+    if (sensor_levels_zone[0] == 5 && sensor_levels_zone[1] == 5 && 
+    	sensor_levels_zone[2] == 5 && sensor_levels_zone[3] == 5)
+    {
+    	pc.printf("sensors at correct level ");
+    	    if(multiple_in_zone == true && highest_severity_index == 3)
+    	    	pc.printf("TEST 4 PASSED -- highest priority chosen");
+    }
+   	else
+   		pc.printf("TEST 4 FAILED");
     
 }//endofmain
