@@ -171,10 +171,10 @@ InterruptIn volume(PTB1);
 /********************************************************************/
 PwmOut speaker(PTE1); 
 
-const uint sensor_frequency_range[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000}, 
+const int SENSOR_FREQUENCY_RANGE[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000}, 
                                                                    {1200,1700},
                                                                    {1850,2250},
-                                                                   {2500,3000}}
+                                                                   {2500,3000}};
 
 float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uint16_t raw_reading)
 {  
