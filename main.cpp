@@ -82,6 +82,12 @@ const uint16_t BUFFER_ZONES[4][8] = {{0,0,0,0,0,0,0,0},
                                      {0,0,0,0,0,0,0,0}, 
                                      {0,0,0,0,0,0,0,0},
                                      {0,0,0,0,0,0,0,0}};
+
+const uint8_t NORMAL = 1,
+              ADVISORY = 2,
+              CAUTION = 3,
+              WARNING = 4,
+              EMERGENCY = 5;
 /*
 const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
                S1UB1 = 0, 
@@ -127,26 +133,26 @@ const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
 uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
 {
     if (raw_reading < BUFFER_ZONES[sensor_index][0])
-        return 1;
+        return NORMAL;
     else if (raw_reading < BUFFER_ZONES[sensor_index][1])
         return previous_zone; // this returns the previous zone. here i'm assuming that 
                               // previous_zone was either of the neighboring zones, but
                               // in future iterations, it might be better to start the 
                               // determination based on what the previous zone was
     else if (raw_reading < BUFFER_ZONES[sensor_index][2])
-        return 2;
+        return ADVISORY;
     else if (raw_reading < BUFFER_ZONES[sensor_index][3])
         return previous_zone;
     else if (raw_reading < BUFFER_ZONES[sensor_index][4])
-        return 3;
+        return CAUTION;
     else if (raw_reading < BUFFER_ZONES[sensor_index][5])
         return previous_zone;
     else if (raw_reading < BUFFER_ZONES[sensor_index][6])
-        return 4;
+        return WARNING;
     else if (raw_reading < BUFFER_ZONES[sensor_index][7])
         return previous_zone;
     else 
-        return 5;
+        return EMERGENCY;
 }
 /********************************************************************/
 
@@ -157,13 +163,32 @@ InterruptIn volume(PTB1);
 //setup in main
 //calls a function to call a function bc pattycake said so
 
+//take code from rotary test
+
 /********************************************************************/
 
 //something about amplifiers -_______-
 /********************************************************************/
 PwmOut speaker(PTE1); 
 
+const uint sensor_frequency_range[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000}, 
+                                                                   {1200,1700},
+                                                                   {1850,2250},
+                                                                   {2500,3000}}
 
+float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uint16_t raw_reading)
+{  
+    switch(zone)
+    {
+        case 1:
+            return 0;
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+    }
+
+}
 /*
 dont forget to write the duty cycle AFTER the period like:
 float duty_cycle; //value between 0 and 1
@@ -173,6 +198,7 @@ duty_cycle = <based on priority/level>
 speaker.period(<determined by algorithm>); //accepts float values in seconds (1.0/frequency)
 speaker.write(duty_cycle);
 /********************************************************************/
+
 
 
 int main()
@@ -246,7 +272,18 @@ int main()
                 snooze_on = false; //turns snooze off if set duration has passed
         }
 
-        //determine which signal has highest priority
+        if(sensor_levels_zone[highest_severity_index] >= CAUTION)
+        {
+            determineOutputFrequency(highest_severity_index,sensor_levels_zone[highest_severity_index],
+                                     sensor_levels_raw[highest_severity_index]);
+
+            //output
+
+        } 
+        else
+        {
+            speaker.write(0.0); //turn off speaker
+        }
 
         //calculate signal to output
 
