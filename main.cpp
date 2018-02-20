@@ -181,11 +181,25 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
     switch(zone)
     {
         case 1:
-            return 0;
+            pc.printf("ERROR - NORMAL ZONE SHOULD NOT TRIGGER OUTPUT CALC");
+            break;
         case 2:
+            pc.printf("ERROR - ADVISORY ZONE SHOULD NOT TRIGGER OUTPUT CALC");
+            break;
         case 3:
+            pc.printf("in caution output calculation");
+            //do math
+            break;
         case 4:
+            pc.printf("in warning output calculation");
+            //do math
+            break;
         case 5:
+            pc.printf("in emergency output calculation");
+            //do math
+            break;
+        default:
+            pc.printf("something is very wrong with zone")
     }
 
 }
@@ -211,7 +225,7 @@ int main()
     uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
 
     //for snooze stuff
-    int time_passed;
+    int time_snoozed;
     
     pc.baud(115200);
     
@@ -266,9 +280,9 @@ int main()
         if(snooze_on)
         {
             //also available: t_snooze.read_ms();
-            time_passed = t_snooze.read_us(); //reads the timer
+            time_snoozed = t_snooze.read_us(); //reads the timer
 
-            if( time_passed > SNOOZE_DURATION_US )
+            if( time_snoozed > SNOOZE_DURATION_US )
                 snooze_on = false; //turns snooze off if set duration has passed
         }
 
