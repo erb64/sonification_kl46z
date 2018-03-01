@@ -133,7 +133,8 @@ const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
 uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
 {
     //[Emergency|Warning|Caution|Advisory|Normal|Advisory|Caution|Warning|Emergency]
-    if (sensor_index == temperature_sensor)
+ 
+ /*   if (sensor_index == temperature_sensor)
     {
         if(raw_reading < <lowemergencybuffer> || raw_reading > <highemergencybuffer>)
             return EMERGENCY;
@@ -146,6 +147,7 @@ uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_
         else
             return NORMAL;
     }
+    */
 
     if (raw_reading < BUFFER_ZONES[sensor_index][0])
         return NORMAL;
@@ -190,20 +192,34 @@ Ticker flipper;
 float f_alt, //frequency with which tones alternate or turn off and on (warning and emergency)
       f_low,
       f_high;
-bool flip = true;
+bool isFlip = true;
 
 const int SENSOR_FREQUENCY_RANGE[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000}, 
                                                                    {1200,1700},
                                                                    {1850,2250},
                                                                    {2500,3000}};
 
-uint8_t f_range = 500;
+int f_range = 500;
 
+int temperature_sensor = 0; //replace with index of temperature sensor
+
+void flip(){
+    if(isFlip)
+    {
+        isFlip = !isFlip;
+        speaker.period(1/f_low);
+        speaker.write(0.5);
+    }
+    else
+    {
+        isFlip = !isFlip;
+        speaker.period(1/f_high);
+        speaker.write(0.5);
+    }
+}
 
 float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uint16_t raw_reading)
 {  
-    
-
     switch(zone)
     {
         case 1:
@@ -226,7 +242,7 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
             //f_alt = ???
             f_low = SENSOR_FREQUENCY_RANGE[highest_severity_index][0];
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
-            flipper.attach(&flip, f_alt);
+            flipper.attach(&flip, 1/f_alt);
 
             break;
         case 5:
@@ -235,28 +251,15 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
             //f_alt = ???
             f_low = -3.4E38; //because you cannot divide by zero
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
-            flipper.attach(&flip, f_alt);
+            flipper.attach(&flip, 1/f_alt);
             break;
         default:
-            pc.printf("something is very wrong with zone")
+            pc.printf("something is very wrong with zone");
     }
 
 }
 
-void flip(){
-    if(flip)
-    {
-        flip = !flip;
-        speaker.period(1/f_low);
-        speaker.write(0.5);
-    }
-    else
-    {
-        flip = !flip;
-        speaker.period(1/f_high);
-        speaker.write(0.5);
-    }
-}
+
 
 /*
 dont forget to write the duty cycle AFTER the period like:
