@@ -132,6 +132,21 @@ const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
 // can also be optimized by passing variables by reference
 uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
 {
+    //[Emergency|Warning|Caution|Advisory|Normal|Advisory|Caution|Warning|Emergency]
+    if (sensor_index == temperature_sensor)
+    {
+        if(raw_reading < <lowemergencybuffer> || raw_reading > <highemergencybuffer>)
+            return EMERGENCY;
+        else if (raw_reading < <lowwarningbuffer> || raw_reading > <highwarningbuffer>)
+            return WARNING;
+        else if (raw_reading < <lowcautionbuffer> || raw_reading > <highcautionbuffer>)
+            return CAUTION;
+        else if (raw_reading < <lowadvisorybuffer> || raw_reading > <highadvisorybuffer>)
+            return ADVISORY;
+        else
+            return NORMAL;
+    }
+
     if (raw_reading < BUFFER_ZONES[sensor_index][0])
         return NORMAL;
     else if (raw_reading < BUFFER_ZONES[sensor_index][1])
@@ -171,13 +186,21 @@ InterruptIn volume(PTB1);
 /********************************************************************/
 PwmOut speaker(PTE1); 
 
+Ticker warningFlipper;
+float flipInterval;
+bool flip = true;
+
 const int SENSOR_FREQUENCY_RANGE[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000}, 
                                                                    {1200,1700},
                                                                    {1850,2250},
                                                                    {2500,3000}};
 
+uint8_t f_range = 500;
+
+
 float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uint16_t raw_reading)
 {  
+    warningFlipper.detach();
     switch(zone)
     {
         case 1:
@@ -186,13 +209,18 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
         case 2:
             pc.printf("ERROR - ADVISORY ZONE SHOULD NOT TRIGGER OUTPUT CALC");
             break;
-        case 3:
+        case 3: //caution
             pc.printf("in caution output calculation");
             //do math
             break;
-        case 4:
+        case 4: //warning
             pc.printf("in warning output calculation");
-            //do math
+            //do math to determine alternating frequency
+            //f_alt = ???
+            f_low = SENSOR_FREQUENCY_RANGE[highest_severity_index][0];
+            f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
+            warningFlipper.attach(&w_flip, f_alt);
+
             break;
         case 5:
             pc.printf("in emergency output calculation");
@@ -202,6 +230,21 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
             pc.printf("something is very wrong with zone")
     }
 
+}
+
+void w_flip(){
+    if(flip)
+    {
+        flip = !flip;
+        speaker.period(1/f_low);
+        speaker.write(0.5);
+    }
+    else
+    {
+        flip = !flip;
+        speaker.period(1/f_high);
+        speaker.write(0.5);
+    }
 }
 /*
 dont forget to write the duty cycle AFTER the period like:
