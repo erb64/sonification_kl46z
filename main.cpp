@@ -186,8 +186,10 @@ InterruptIn volume(PTB1);
 /********************************************************************/
 PwmOut speaker(PTE1); 
 
-Ticker warningFlipper;
-float flipInterval;
+Ticker flipper;
+float f_alt, //frequency with which tones alternate or turn off and on (warning and emergency)
+      f_low,
+      f_high;
 bool flip = true;
 
 const int SENSOR_FREQUENCY_RANGE[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000}, 
@@ -200,18 +202,23 @@ uint8_t f_range = 500;
 
 float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uint16_t raw_reading)
 {  
-    warningFlipper.detach();
+    
+
     switch(zone)
     {
         case 1:
             pc.printf("ERROR - NORMAL ZONE SHOULD NOT TRIGGER OUTPUT CALC");
+            flipper.detach();
             break;
         case 2:
             pc.printf("ERROR - ADVISORY ZONE SHOULD NOT TRIGGER OUTPUT CALC");
+            //trigger display message
+            flipper.detach();
             break;
         case 3: //caution
             pc.printf("in caution output calculation");
-            //do math
+            flipper.detach();
+            //do math to determine f_out
             break;
         case 4: //warning
             pc.printf("in warning output calculation");
@@ -219,12 +226,16 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
             //f_alt = ???
             f_low = SENSOR_FREQUENCY_RANGE[highest_severity_index][0];
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
-            warningFlipper.attach(&w_flip, f_alt);
+            flipper.attach(&flip, f_alt);
 
             break;
         case 5:
             pc.printf("in emergency output calculation");
-            //do math
+            //do math to determine alternating frequency
+            //f_alt = ???
+            f_low = -3.4E38; //because you cannot divide by zero
+            f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
+            flipper.attach(&flip, f_alt);
             break;
         default:
             pc.printf("something is very wrong with zone")
@@ -232,7 +243,7 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
 
 }
 
-void w_flip(){
+void flip(){
     if(flip)
     {
         flip = !flip;
@@ -246,6 +257,7 @@ void w_flip(){
         speaker.write(0.5);
     }
 }
+
 /*
 dont forget to write the duty cycle AFTER the period like:
 float duty_cycle; //value between 0 and 1
@@ -328,19 +340,14 @@ int main()
             if( time_snoozed > SNOOZE_DURATION_US )
                 snooze_on = false; //turns snooze off if set duration has passed
         }
-
-        if(sensor_levels_zone[highest_severity_index] >= CAUTION)
-        {
-            determineOutputFrequency(highest_severity_index,sensor_levels_zone[highest_severity_index],
-                                     sensor_levels_raw[highest_severity_index]);
-
-            //output
-
-        } 
         else
         {
-            speaker.write(0.0); //turn off speaker
+            determineOutputFrequency(highest_severity_index,sensor_levels_zone[highest_severity_index],
+                                 sensor_levels_raw[highest_severity_index]);
         }
+        
+
+        
 
         //calculate signal to output
 
