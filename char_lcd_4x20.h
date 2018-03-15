@@ -8,7 +8,7 @@
 
 /* Default is to not use RW pin and write-only the LCD */
 #ifndef CHARACTER_LCD_USE_RW
-/* #define CHARACTER_LCD_USE_RW */
+#define CHARACTER_LCD_USE_RW
 #endif
 
 #ifdef CHARACTER_LCD_USE_RW 
@@ -26,7 +26,7 @@
 
 /* Default is to use 4-bit data bus */
 #ifndef CHARACTER_LCD_BUS_8BITS
-/* #define CHARACTER_LCD_BUS_8BITS */
+// #define CHARACTER_LCD_BUS_8BITS 
 #endif
 
 /*
@@ -215,7 +215,7 @@ int character_lcd_write_byte(uint8_t lcd_data, uint8_t lcd_select)
 
 void character_lcd_initialize(void)
 {
-    wait(20E-3);
+    wait(40E-3);
     character_lcd_write_nybble(0x03,RS_COMMAND);        /* reset signal, must be repeated 3 times with delays */
     wait(20E-3);
     character_lcd_write_nybble(0x03,RS_COMMAND);        /* reset signal, must be repeated 3 times with delays */
@@ -314,9 +314,9 @@ int character_lcd_read_byte(uint8_t *lcd_data, uint8_t lcd_select)
     wait(CHARACTER_LCD_STANDARD_DELAY);
 
 #ifndef CHARACTER_LCD_BUS_8BITS
-    temp=character_lcd_read_nybble(*temp1, lcd_select);   /*upper nybble*/
+//    temp=character_lcd_read_nybble(*temp1, lcd_select);   /*upper nybble*/
     if(temp < 0) {return(temp); }
-    temp=character_lcd_read_nybble(*temp2, lcd_select);   /*lower nybble*/
+//    temp=character_lcd_read_nybble(*temp2, lcd_select);   /*lower nybble*/
     if(temp < 0) {return(temp); }
     *lcd_data=(temp1<<4)+temp2;
  #endif   

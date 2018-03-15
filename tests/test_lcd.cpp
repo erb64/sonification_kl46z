@@ -9,12 +9,12 @@
 #ifdef USE_CHARACTER_LCD
 // will change depending on connections
 
-#define CHARACTER_LCD_RS PTE17
-#define CHARACTER_LCD_E PTE19
-#define CHARACTER_LCD_DB4 PTE16
-#define CHARACTER_LCD_DB5 PTE6
-#define CHARACTER_LCD_DB6 PTE3
-#define CHARACTER_LCD_DB7 PTE2
+// #define CHARACTER_LCD_RS PTE17
+// #define CHARACTER_LCD_E PTE19
+// #define CHARACTER_LCD_DB4 PTE16
+// #define CHARACTER_LCD_DB5 PTE6
+// #define CHARACTER_LCD_DB6 PTE3
+// #define CHARACTER_LCD_DB7 PTE2
 #define CHARACTER_LCD_ROWS 4
 #define CHARACTER_LCD_COLUMNS 20
 
@@ -40,14 +40,16 @@ Serial pc (USBTX, USBRX); //tx, rx
 
 int main()
 {
-	string test_string_1 = "first test string", //17 chars
-	       test_string_2 = "the quick brown fox jumps over the lazy dog",
-	       test_string_3 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-	       test_string_4 = "1234567890",
-	       test_string_5 = "~!@#$%^&*()_+=-`[]|}{:';<>\\"
+	char test_string_1[] = "first test string", //17 chars
+	       test_string_2[] = "the quick brown fox jumps over the lazy dog",
+	       test_string_3[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	       test_string_4[] = "1234567890",
+	       test_string_5[] = "~!@#$%^&*()_+=-`[]|}{:';<>\\"
 	char choice;
 
 	float wait_seconds = 10.0;
+
+	pc.baud(115200);
 
 	character_lcd_initialize();
 

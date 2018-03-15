@@ -51,10 +51,10 @@ uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_
     else if (raw_reading < BUFFER_ZONES[sensor_index][7])
         return previous_zone;
     else 
-        return 5;
+        return 5; 
 }
-/********************************************************************/
 
+/********************************************************************/
 bool multiple_in_zone;
 uint8_t count_in_high_zone;
 uint8_t highest_severity_index;
