@@ -53,7 +53,7 @@ bool snooze_on = false;
 const int SNOOZE_DURATION_MIN = 1, //preset by user
           SNOOZE_DURATION_US = SNOOZE_DURATION_MIN * 60000000; //60 million microseconds in each minute
 
-InterruptIn snooze(PTA6); //CHANGE PORT NAME;
+InterruptIn snooze(PTD3);
 Timer t_snooze; 
 
 void setup_t_snooze()
@@ -68,10 +68,10 @@ void setup_t_snooze()
 /********************************************************************/
 const uint8_t NUM_SENSORS = 4;
 
-AnalogIn sensor1(PTB1);
+AnalogIn sensor1(PTB0);
 AnalogIn sensor2(PTB1);
-AnalogIn sensor3(PTB1);
-AnalogIn sensor4(PTB1);
+AnalogIn sensor3(PTB2);
+AnalogIn sensor4(PTB3);
 
 //buffer ranges, necessary for setting up priority. names of sensors may
 
@@ -180,7 +180,8 @@ uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_
 
 //Volume input
 /********************************************************************/
-InterruptIn volume(PTB1);
+InterruptIn volume1(PTC9);
+InterruptIn volume2(PTC8);
 
 //setup in main
 //calls a function to call a function bc pattycake said so
@@ -191,7 +192,7 @@ InterruptIn volume(PTB1);
 
 //something about amplifiers -_______-
 /********************************************************************/
-PwmOut speaker(PTE1); 
+PwmOut speaker(PTD2); 
 
 Ticker flipper;
 float f_alt, //frequency with which tones alternate or turn off and on (warning and emergency)
