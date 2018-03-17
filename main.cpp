@@ -9,14 +9,19 @@
 #ifdef USE_CHARACTER_LCD
 // will change depending on connections
 
-#define CHARACTER_LCD_RS PTE17
-#define CHARACTER_LCD_E PTE19
-#define CHARACTER_LCD_DB4 PTE16
-#define CHARACTER_LCD_DB5 PTE6
-#define CHARACTER_LCD_DB6 PTE3
-#define CHARACTER_LCD_DB7 PTE2
-#define CHARACTER_LCD_ROWS 4
-#define CHARACTER_LCD_COLUMNS 20
+/*
+pins defined in char_lcd_4x20.h
+rw - PTE18
+rs - PTE17
+e  - PTE19
+--using 4bit mode
+db4 - PTE16
+db5 - PTE6
+db6 - PTE3
+db7 - PTE2
+*/
+#define LCD_REFERENCE_VOLTAGE PTE30
+AnalogOut aout(LCD_REFERENCE_VOLTAGE);
 
 #include "char_lcd_4x20.h"
 /* available functions */
@@ -287,6 +292,8 @@ int main()
     
     pc.baud(115200);
     
+    //for lcd
+    aout.write(0.5/3.3f);
     character_lcd_initialize(); //initializes the display
     //other peripheral initializations
 
@@ -351,8 +358,6 @@ int main()
         
 
         
-
-        //calculate signal to output
 
         //output sound/display
 

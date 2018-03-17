@@ -1,4 +1,5 @@
-#include "studio.h"
+//#include "studio.h"
+#include "stdio.h"
 #include "stdint.h"
 #include "mbed.h"
 #include "Freedom_headers.h"
@@ -9,12 +10,12 @@
 #ifdef USE_CHARACTER_LCD
 // will change depending on connections
 
-// #define CHARACTER_LCD_RS PTE17
-// #define CHARACTER_LCD_E PTE19
-// #define CHARACTER_LCD_DB4 PTE16
-// #define CHARACTER_LCD_DB5 PTE6
-// #define CHARACTER_LCD_DB6 PTE3
-// #define CHARACTER_LCD_DB7 PTE2
+//#define CHARACTER_LCD_RS PTE17
+//#define CHARACTER_LCD_E PTE19
+//#define CHARACTER_LCD_DB4 PTE16
+//#define CHARACTER_LCD_DB5 PTE6
+//#define CHARACTER_LCD_DB6 PTE3
+//#define CHARACTER_LCD_DB7 PTE2
 #define CHARACTER_LCD_ROWS 4
 #define CHARACTER_LCD_COLUMNS 20
 
@@ -37,42 +38,55 @@
 /********************************************************************/
 
 Serial pc (USBTX, USBRX); //tx, rx
+AnalogOut aout(PTE30);
 
 int main()
 {
-	char test_string_1[] = "first test string", //17 chars
-	       test_string_2[] = "the quick brown fox jumps over the lazy dog",
-	       test_string_3[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-	       test_string_4[] = "1234567890",
-	       test_string_5[] = "~!@#$%^&*()_+=-`[]|}{:';<>\\"
-	char choice;
+    aout.write(0.5/3.3f);
+    
+    char test_string_1[] = "first test string", //17 chars
+           test_string_2[] = "the quick brown fox "
+           test_string_2_1[] = "jumps over the lazy dog",
+           test_string_3[] = "ABCDEFGHIJKLMNOPQRSTUV",
+           test_string_4[] = "1234567890",
+           test_string_5[] = "~!@#$%^&*()_+=-`[]|}{:';<>";
+    char choice;
 
-	float wait_seconds = 10.0;
+    float wait_seconds = 10.0;
 
-	pc.baud(115200);
+    character_lcd_initialize();
 
-	character_lcd_initialize();
+    pc.printf("The first line of the LCD should display: %s\n\rPress any key to continue", test_string_1);
+    character_lcd_cursor(0,0);
+    character_lcd_puts(test_string_1);
+//    pc.scanf("%c", &choice);
+     wait(wait_seconds);
 
-	pc.printf("The first line of the LCD should display: %s\nPress any key to continue", test_string_1);
-	character_lcd_puts(&test_string_1);
-    pc.scanf("%c", &choice);
-	// wait(wait_seconds);
+    pc.printf("The first line of the LCD should display: %s%s", test_string_2, test_string_2_1);
+    character_lcd_write_byte(0x01,RS_COMMAND);
+    character_lcd_cursor(0,0);
+    character_lcd_puts(test_string_2);
+    character_lcd_cursor(0,CHARACTER_LCD_ROW1_START);
+    character_lcd_puts(test_string_2_1);
+    wait(wait_seconds);
 
-	pc.printf("The first line of the LCD should display: %s", test_string_2);
-	character_lcd_puts(&test_string_2);
-	wait(wait_seconds);
+    pc.printf("The first line of the LCD should display: %s", test_string_3);
+    character_lcd_write_byte(0x01,RS_COMMAND);
+    character_lcd_cursor(0,CHARACTER_LCD_ROW1_START);
+    character_lcd_puts(test_string_3);
+    wait(wait_seconds);
 
-	pc.printf("The first line of the LCD should display: %s", test_string_3);
-	character_lcd_puts(&test_string_3);
-	wait(wait_seconds);
+    pc.printf("The first line of the LCD should display: %s", test_string_4);
+    character_lcd_write_byte(0x01,RS_COMMAND);
+    character_lcd_cursor(0,CHARACTER_LCD_ROW2_START);
+    character_lcd_puts(test_string_4);
+    wait(wait_seconds);
 
-	pc.printf("The first line of the LCD should display: %s", test_string_4);
-	character_lcd_puts(&test_string_4);
-	wait(wait_seconds);
-
-	pc.printf("The first line of the LCD should display: %s", test_string_5);
-	character_lcd_puts(&test_string_5);
-	wait(wait_seconds);
+    pc.printf("The first line of the LCD should display: %s", test_string_5);
+    character_lcd_write_byte(0x01,RS_COMMAND);
+    character_lcd_cursor(0,CHARACTER_LCD_ROW3_START);
+    character_lcd_puts(test_string_5);
+    wait(wait_seconds);
 
 
 }
