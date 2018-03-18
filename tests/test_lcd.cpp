@@ -45,9 +45,9 @@ int main()
     aout.write(0.5/3.3f);
     
     char test_string_1[] = "first test string", //17 chars
-           test_string_2[] = "the quick brown fox "
+           test_string_2[] = "the quick brown fox ",
            test_string_2_1[] = "jumps over the lazy dog",
-           test_string_3[] = "ABCDEFGHIJKLMNOPQRSTUV",
+           test_string_3[] = "ABCDEFGHIJKLMNOPQRST",
            test_string_4[] = "1234567890",
            test_string_5[] = "~!@#$%^&*()_+=-`[]|}{:';<>";
     char choice;
@@ -66,25 +66,26 @@ int main()
     character_lcd_write_byte(0x01,RS_COMMAND);
     character_lcd_cursor(0,0);
     character_lcd_puts(test_string_2);
-    character_lcd_cursor(0,CHARACTER_LCD_ROW1_START);
+    // character_lcd_cursor(0,CHARACTER_LCD_ROW1_START);
+    character_lcd_cursor(1,0);
     character_lcd_puts(test_string_2_1);
     wait(wait_seconds);
 
     pc.printf("The first line of the LCD should display: %s", test_string_3);
     character_lcd_write_byte(0x01,RS_COMMAND);
-    character_lcd_cursor(0,CHARACTER_LCD_ROW1_START);
+    character_lcd_cursor(1,0);
     character_lcd_puts(test_string_3);
     wait(wait_seconds);
 
     pc.printf("The first line of the LCD should display: %s", test_string_4);
     character_lcd_write_byte(0x01,RS_COMMAND);
-    character_lcd_cursor(0,CHARACTER_LCD_ROW2_START);
+    character_lcd_cursor(2,0);
     character_lcd_puts(test_string_4);
     wait(wait_seconds);
 
     pc.printf("The first line of the LCD should display: %s", test_string_5);
     character_lcd_write_byte(0x01,RS_COMMAND);
-    character_lcd_cursor(0,CHARACTER_LCD_ROW3_START);
+    character_lcd_cursor(3,0);
     character_lcd_puts(test_string_5);
     wait(wait_seconds);
 

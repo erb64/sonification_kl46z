@@ -93,6 +93,7 @@ const uint8_t NORMAL = 1,
               CAUTION = 3,
               WARNING = 4,
               EMERGENCY = 5;
+char LEVELS[5][10] = {"NORMAL   ", "ADVISORY ", "CAUTION  ", "WARNING  ", "EMERGENCY"};
 /*
 const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
                S1UB1 = 0, 
@@ -356,9 +357,18 @@ int main()
             determineOutputFrequency(highest_severity_index,sensor_levels_zone[highest_severity_index],
                                  sensor_levels_raw[highest_severity_index]);
         }
-        
 
         
+        character_lcd_puts("Active Sensor: ");
+        character_lcd_putc(highest_severity_index + 1);
+        character_lcd_cursor(1,0);
+        character_lcd_puts("Severity: ");
+        character_lcd_puts(LEVELS[sensor_levels_zone[highest_severity_index]]);
+        character_lcd_cursor(2,0);
+        character_lcd_puts("Volume: "); //replace 1 with volume variable
+        character_lcd_putc(1);
+        character_lcd_cursor(3,0);
+        character_lcd_puts("ADVISORY ---");
 
         //output sound/display
 
