@@ -1,6 +1,7 @@
 #include "mbed.h"
 
 AnalogIn slider(PTB0);
+DigitalOut slider_reset(PTD3);
 Serial pc(USBTX, USBRX);
 
 int main()
