@@ -83,6 +83,7 @@ const uint8_t SENSOR_PRIORITY[] = {1, 2, 3, 4};
 // initialized as uint16_t because the normalized analog in read_u16 returns 
 // a normalized 16bit integer. I did it this way over floats to save space 
 // and increase calculation speed
+// [normal [0]|[1] advisory [2]|[3] caution [4]|[5] warning [6]|[7] emergency ]
 const uint16_t BUFFER_ZONES[4][8] = {{0,0,0,0,0,0,0,0},
                                      {0,0,0,0,0,0,0,0}, 
                                      {0,0,0,0,0,0,0,0},
@@ -224,7 +225,8 @@ void flip(){
     }
 }
 
-float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uint16_t raw_reading)
+float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, 
+                               uint16_t raw_reading)
 {  
     switch(zone)
     {
@@ -241,11 +243,19 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
             pc.printf("in caution output calculation");
             flipper.detach();
             //do math to determine f_out
+            f_out = SENSOR_FREQUENCY_RANGE[highest_severity_index][0] + 
+                    (f_range * (raw_reading - BUFFER_ZONES[highest_severity_index][3]
+                    / (BUFFER_ZONES[highest_severity_index][4] - 
+                    BUFFER_ZONES[highest_severity_index][3]))); 
+            speaker.period(1.0/fout); //calculates period
+            speaker.write(0.5); //half duty cycle gives a square wave
             break;
         case 4: //warning
             pc.printf("in warning output calculation");
             //do math to determine alternating frequency
-            //f_alt = ???
+            f_alt = 10 + (40 * (raw_reading - BUFFER_ZONES[highest_severity_index][5]
+                    / (BUFFER_ZONES[highest_severity_index][6] - 
+                    BUFFER_ZONES[highest_severity_index][5])));
             f_low = SENSOR_FREQUENCY_RANGE[highest_severity_index][0];
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
             flipper.attach(&flip, 1/f_alt);
@@ -254,7 +264,8 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone, uin
         case 5:
             pc.printf("in emergency output calculation");
             //do math to determine alternating frequency
-            //f_alt = ???
+            f_alt = 10 + (40 * (raw_reading - BUFFER_ZONES[highest_severity_index][7]
+                    / (65,535 - BUFFER_ZONES[highest_severity_index][7])));
             f_low = -3.4E38; //because you cannot divide by zero
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
             flipper.attach(&flip, 1/f_alt);
