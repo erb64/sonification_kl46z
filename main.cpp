@@ -62,6 +62,8 @@ void setup_t_snooze()
     t_snooze.reset();
     t_snooze.start();
 }
+
+
 /********************************************************************/
 
 //Sensor Inputs and buffer ranges
@@ -93,6 +95,7 @@ const uint8_t NORMAL = 1,
               CAUTION = 3,
               WARNING = 4,
               EMERGENCY = 5;
+
 char LEVELS[5][10] = {"NORMAL   ", "ADVISORY ", "CAUTION  ", "WARNING  ", "EMERGENCY"};
 /*
 const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
@@ -183,6 +186,18 @@ uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_
 /********************************************************************/
 InterruptIn volume1(PTC9);
 InterruptIn volume2(PTC8);
+InterruptIn reset(PTC7); //needs to be changed
+
+DigitalOut slider_reset(PTD3); //connects to positive terminal of slider reset
+
+void reset_sliders()
+{
+    slider_reset = 1;
+
+    wait(2);
+
+    slider_reset = 0;
+}
 
 //setup in main
 //calls a function to call a function bc pattycake said so
@@ -291,6 +306,11 @@ int main()
 
     //for snooze stuff
     int time_snoozed;
+    slider_reset = 0;
+
+    //reset and volume stuff
+    reset.mode(PullDown);
+    reset.rise(&reset_sliders);
     
     pc.baud(115200);
     
