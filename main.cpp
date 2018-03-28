@@ -98,66 +98,29 @@ const uint8_t NORMAL = 1,
               EMERGENCY = 5;
 
 char LEVELS[5][10] = {"NORMAL   ", "ADVISORY ", "CAUTION  ", "WARNING  ", "EMERGENCY"};
-/*
-const uint16_t S1LB1 = 0, //value indicates the low end for the first buffer
-               S1UB1 = 0, 
-               S1LB2 = 0,
-               S1UB2 = 0, 
-               S1LB3 = 0, 
-               S1UB3 = 0, 
-               S1LB4 = 0, 
-               S1UB4 = 0; 
 
-//buffer zones for sensor 2
-const uint16_t S2LB1 = 0, //value indicates the low end for the first buffer
-               S2UB1 = 0, 
-               S2LB2 = 0,
-               S2UB2 = 0, 
-               S2LB3 = 0, 
-                S2UB3 = 0, 
-                S2LB4 = 0, 
-                S2UB4 = 0; 
+int temperature_sensor = 0; //replace with index of temperature sensor
 
-//buffer zones for sensor 3
-const uint16_t S3LB1 = 0, //value indicates the low end for the first buffer
-                S3UB1 = 0, 
-                S3LB2 = 0,
-                S3UB2 = 0, 
-                S3LB3 = 0, 
-                S3UB3 = 0, 
-                S3LB4 = 0, 
-                S3UB4 = 0; 
-
-//buffer zones for sensor 4
-const uint16_t S4LB1 = 0,//value indicates the low end for the first buffer
-                S4UB1 = 0,
-                S4LB2 = 0,
-                S4UB2 = 0,
-                S4LB3 = 0, 
-                S4UB3 = 0, 
-                S4LB4 = 0, 
-                S4UB4 = 0; 
-*/
 // this algorithm can be optimized if we begin the comparison based on the previous zone
 // can also be optimized by passing variables by reference
 uint8_t determineSeverityZone(uint8_t sensor_index, uint16_t raw_reading, uint8_t previous_zone)
 {
     //[Emergency|Warning|Caution|Advisory|Normal|Advisory|Caution|Warning|Emergency]
  
- /*   if (sensor_index == temperature_sensor)
+    if (sensor_index == temperature_sensor)
     {
-        if(raw_reading < <lowemergencybuffer> || raw_reading > <highemergencybuffer>)
+        if(raw_reading < BUFFER_ZONES[temperature_sensor][0] || raw_reading > BUFFER_ZONES[temperature_sensor][7])
             return EMERGENCY;
-        else if (raw_reading < <lowwarningbuffer> || raw_reading > <highwarningbuffer>)
+        else if (raw_reading < BUFFER_ZONES[temperature_sensor][1] || raw_reading > BUFFER_ZONES[temperature_sensor][6])
             return WARNING;
-        else if (raw_reading < <lowcautionbuffer> || raw_reading > <highcautionbuffer>)
+        else if (raw_reading < BUFFER_ZONES[temperature_sensor][2] || raw_reading > BUFFER_ZONES[temperature_sensor][5])
             return CAUTION;
-        else if (raw_reading < <lowadvisorybuffer> || raw_reading > <highadvisorybuffer>)
+        else if (raw_reading < BUFFER_ZONES[temperature_sensor][3] || raw_reading > BUFFER_ZONES[temperature_sensor][4])
             return ADVISORY;
         else
             return NORMAL;
     }
-    */
+
 
     if (raw_reading < BUFFER_ZONES[sensor_index][0])
         return NORMAL;
@@ -224,7 +187,7 @@ const int SENSOR_FREQUENCY_RANGE[NUM_SENSORS][NUM_SENSORS * 2] = {{500,1000},
 
 int f_range = 500;
 
-int temperature_sensor = 0; //replace with index of temperature sensor
+
 
 void flip(){
     if(isFlip)
