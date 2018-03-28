@@ -86,10 +86,10 @@ const uint8_t SENSOR_PRIORITY[] = {1, 2, 3, 4};
 // a normalized 16bit integer. I did it this way over floats to save space 
 // and increase calculation speed
 // [normal [0]|[1] advisory [2]|[3] caution [4]|[5] warning [6]|[7] emergency ]
-const uint16_t BUFFER_ZONES[4][8] = {{0,0,0,0,0,0,0,0},
-                                     {0,0,0,0,0,0,0,0}, 
-                                     {0,0,0,0,0,0,0,0},
-                                     {0,0,0,0,0,0,0,0}};
+const uint16_t BUFFER_ZONES[4][8] = {{11800,13433,25234,26867,38668,40301,52102,53735},
+                                     {11800,13433,25234,26867,38668,40301,52102,53735}, 
+                                     {11800,13433,25234,26867,38668,40301,52102,53735},
+                                     {11800,13433,25234,26867,38668,40301,52102,53735}};
 
 const uint8_t NORMAL = 1,
               ADVISORY = 2,
@@ -280,9 +280,9 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone,
         case 5:
             pc.printf("in emergency output calculation");
             //do math to determine alternating frequency
-            f_alt = 10 + (40 * (raw_reading - BUFFER_ZONES[highest_severity_index][7]
+            f_alt = 10 + (40 * ((raw_reading - BUFFER_ZONES[highest_severity_index][7])
                     / (65,535 - BUFFER_ZONES[highest_severity_index][7])));
-            f_low = -3.4E38; //because you cannot divide by zero
+            f_low = 3.4E-38; //because you cannot divide by zero
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
             flipper.attach(&flip, 1/f_alt);
             break;
@@ -401,8 +401,8 @@ int main()
         character_lcd_cursor(3,0);
         character_lcd_puts("ADVISORY ---");
 
-        //output sound/display
-
     }
 
 }
+
+10 + (40 * ((raw_reading - BUFFER_ZONES[highest_severity_index][7]) / (65,535 - BUFFER_ZONES[highest_severity_index][7])))
