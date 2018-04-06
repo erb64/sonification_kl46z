@@ -7,6 +7,12 @@
 /* This is assumed to use a HD44780 chipset or equivalent. */
 
 /* Default is to not use RW pin and write-only the LCD */
+
+
+#ifndef CHARACTER_LCD_RS
+#define CHARACTER_LCD_RS PTE19
+#endif 
+
 #ifndef CHARACTER_LCD_USE_RW
 #define CHARACTER_LCD_USE_RW
 #endif
@@ -17,11 +23,8 @@
 #endif
 #endif
 
-#ifndef CHARACTER_LCD_RS
-#define CHARACTER_LCD_RS PTE17
-#endif
 #ifndef CHARACTER_LCD_E
-#define CHARACTER_LCD_E PTE19
+#define CHARACTER_LCD_E PTE17
 #endif
 
 /* Default is to use 4-bit data bus */

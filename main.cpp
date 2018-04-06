@@ -1,4 +1,5 @@
 //#include "studio.h"
+#include <stdio.h>
 #include "stdint.h"
 #include "mbed.h"
 #include "Freedom_headers.h"
@@ -11,9 +12,9 @@
 
 /*
 pins defined in char_lcd_4x20.h
+rs - PTE19
 rw - PTE18
-rs - PTE17
-e  - PTE19
+e  - PTE17
 --using 4bit mode
 db4 - PTE16
 db5 - PTE6
@@ -71,15 +72,15 @@ void setup_t_snooze()
 const uint8_t NUM_SENSORS = 4;
 
 AnalogIn sensor1(PTB0);
-AnalogIn sensor2(PTB1);
-AnalogIn sensor3(PTB2);
-AnalogIn sensor4(PTB3);
+AnalogIn sensor2(PTB0);
+AnalogIn sensor3(PTB0);
+AnalogIn sensor4(PTB0);
 
 //buffer ranges, necessary for setting up priority. names of sensors may
 
 //index refers to number of sensor [s1 value, s2 value,....]
 //highest priority is 4 -- lowest is 1
-const uint8_t SENSOR_PRIORITY[] = {1, 2, 3, 4};
+const uint8_t SENSOR_PRIORITY[] = {4,3,2,1};
 
 //buffer zones for sensor 1
 // initialized as uint16_t because the normalized analog in read_u16 returns 
@@ -210,43 +211,52 @@ float determineOutputFrequency(uint8_t highest_severity_index, uint8_t zone,
     switch(zone)
     {
         case 1:
-            pc.printf("ERROR - NORMAL ZONE SHOULD NOT TRIGGER OUTPUT CALC");
+            pc.printf("normal zone, shutting off output\n\r");
+            speaker.write(0);
             flipper.detach();
             break;
         case 2:
-            pc.printf("ERROR - ADVISORY ZONE SHOULD NOT TRIGGER OUTPUT CALC");
+            pc.printf("advisory zone, shutting off output\n\r");
             //trigger display message
+            speaker.write(0);
             flipper.detach();
             break;
         case 3: //caution
-            pc.printf("in caution output calculation");
+            pc.printf("in caution output calculation\n\r");
             flipper.detach();
             //do math to determine f_out
-            f_out = SENSOR_FREQUENCY_RANGE[highest_severity_index][0] + 
-                    (f_range * (raw_reading - BUFFER_ZONES[highest_severity_index][3]
+            f_low = SENSOR_FREQUENCY_RANGE[highest_severity_index][0] + 
+                    (f_range * (raw_reading - BUFFER_ZONES[highest_severity_index][3])
                     / (BUFFER_ZONES[highest_severity_index][4] - 
-                    BUFFER_ZONES[highest_severity_index][3]))); 
-            speaker.period(1.0/fout); //calculates period
+                    BUFFER_ZONES[highest_severity_index][3])); 
+            pc.printf("f_out calculated as: %f for sensor: %i\n\r", f_low, highest_severity_index);
+            speaker.period(1.0/f_low); //calculates period
             speaker.write(0.5); //half duty cycle gives a square wave
             break;
         case 4: //warning
-            pc.printf("in warning output calculation");
+            pc.printf("in warning output calculation\n\r");
             //do math to determine alternating frequency
-            f_alt = 10 + (40 * (raw_reading - BUFFER_ZONES[highest_severity_index][5]
+            f_alt = 5 + (30 * (raw_reading - BUFFER_ZONES[highest_severity_index][5])
                     / (BUFFER_ZONES[highest_severity_index][6] - 
-                    BUFFER_ZONES[highest_severity_index][5])));
+                    BUFFER_ZONES[highest_severity_index][5]));
+            pc.printf("f_alt calculated as: %f\n\r", f_alt);
             f_low = SENSOR_FREQUENCY_RANGE[highest_severity_index][0];
+            pc.printf("f_low calculated as: %f\n\r", f_low);
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
+            pc.printf("f_high calculated as: %f\n\r", f_high);
             flipper.attach(&flip, 1/f_alt);
 
             break;
         case 5:
-            pc.printf("in emergency output calculation");
+            pc.printf("in emergency output calculation\n\r");
             //do math to determine alternating frequency
-            f_alt = 10 + (40 * ((raw_reading - BUFFER_ZONES[highest_severity_index][7])
-                    / (65,535 - BUFFER_ZONES[highest_severity_index][7])));
+            f_alt = 5 + (30 * (raw_reading - BUFFER_ZONES[highest_severity_index][7])
+                    / (65535 - BUFFER_ZONES[highest_severity_index][7]));
+            pc.printf("f_alt calculated as: %f\n\r", f_alt);
             f_low = 3.4E-38; //because you cannot divide by zero
+            pc.printf("f_low calculated as: %f\n\r", f_low);
             f_high = SENSOR_FREQUENCY_RANGE[highest_severity_index][1];
+            pc.printf("f_high calculated as: %f\n\r", f_high);
             flipper.attach(&flip, 1/f_alt);
             break;
         default:
@@ -277,7 +287,7 @@ int main()
     uint8_t highest_severity_index;
     uint16_t sensor_levels_raw[NUM_SENSORS];
     uint8_t sensor_levels_zone[NUM_SENSORS] = {1, 1, 1, 1}; //all sensors default to normal region
-
+    char stringbuffer[5];
     //for snooze stuff
     int time_snoozed;
     slider_reset = 0;
@@ -291,6 +301,7 @@ int main()
     //for lcd
     aout.write(0.5/3.3f);
     character_lcd_initialize(); //initializes the display
+
     //other peripheral initializations
 
     //snooze initialization
@@ -301,9 +312,13 @@ int main()
     {
         //pole sensors 
         sensor_levels_raw[0] = sensor1.read_u16(); //may change these s1, s2, to some array
+        pc.printf("sensor 0 read as %i\n\r", sensor_levels_raw[0]);
         sensor_levels_raw[1] = sensor2.read_u16(); //reads as a 16 bit normalized unsigned integer (for 0V - 3.3V)
+        pc.printf("sensor 1 read as %i\n\r", sensor_levels_raw[1]);
         sensor_levels_raw[2] = sensor3.read_u16();
+        pc.printf("sensor 2 read as %i\n\r", sensor_levels_raw[2]);
         sensor_levels_raw[3] = sensor4.read_u16();
+        pc.printf("sensor 3 read as %i\n\r", sensor_levels_raw[3]);
         /* mbed documentation for AnalogIn's read_u16() function
         Read the input voltage, represented as an unsigned short in the range [0x0, 0xFFFF]
 
@@ -352,20 +367,30 @@ int main()
                                  sensor_levels_raw[highest_severity_index]);
         }
 
-        
+        character_lcd_cursor(0,0);
         character_lcd_puts("Active Sensor: ");
-        character_lcd_putc(highest_severity_index + 1);
+        sprintf(stringbuffer, "%i", highest_severity_index + 1); //will need to convert this to label
+        // character_lcd_putc(highest_severity_index + 1);
+        character_lcd_puts(stringbuffer);
         character_lcd_cursor(1,0);
         character_lcd_puts("Severity: ");
-        character_lcd_puts(LEVELS[sensor_levels_zone[highest_severity_index]]);
+        character_lcd_puts(LEVELS[sensor_levels_zone[highest_severity_index] - 1]);
         character_lcd_cursor(2,0);
         character_lcd_puts("Volume: "); //replace 1 with volume variable
-        character_lcd_putc(1);
+        character_lcd_putc('1');
         character_lcd_cursor(3,0);
-        character_lcd_puts("ADVISORY ---");
+        character_lcd_puts("ADVISORY: ");
+        for(int i = 0; i < NUM_SENSORS; i++)
+        {
+            if (sensor_levels_zone[i] == 2){
+                sprintf(stringbuffer,"%i ", i + 1);
+                character_lcd_puts(stringbuffer);
+            }
+            else
+                character_lcd_puts("  ");
+
+        }
 
     }
 
 }
-
-10 + (40 * ((raw_reading - BUFFER_ZONES[highest_severity_index][7]) / (65,535 - BUFFER_ZONES[highest_severity_index][7])))
